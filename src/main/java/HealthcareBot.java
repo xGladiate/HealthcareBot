@@ -1,3 +1,6 @@
+import Command.PlayGame.GameIntroduction;
+import Command.PlayGame.TaskCompletion;
+import Command.PlayGame.TaskGeneration;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -5,6 +8,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.games.Game;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -44,7 +48,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 SendMessage message = SendMessage // Create a message object
                         .builder()
                         .chatId(chat_id)
-                        .text("Hi!! Welcome to Healthcare Bot, please click on the icon at the right of the text box to play a game!")
+                        .text("Hi!! Welcome to Healthcare Bot, please click on the icon at the right of the text box or open your keyboard to play a game!")
                         .build();
 
                 // Add the keyboard to the message
@@ -64,16 +68,28 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("Play Game")) {
                 // Send a picture to the user
-                SendPhoto msg = SendPhoto
-                        .builder()
-                        .chatId(chat_id)
-                        // This time will send the picture using a URL
-                        .photo(new InputFile("https://www.kaspersky.com/content/en-global/images/repository/isc/2021/what_are_bots_image2_710x400px_300dpi.jpg"))
-                        .caption("Clicked button: " + message_text)
-                        .build();
+                SendMessage message = GameIntroduction.startGame(chat_id);
 
                 try {
-                    telegramClient.execute(msg); // Call method to send the photo
+                    telegramClient.execute(message); // Call method to send the photo
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("Spin the wheel")) {
+                // Send a picture to the user
+                SendPhoto message = TaskGeneration.taskGeneration(chat_id);
+                SendPhoto taskFoundMessage = TaskGeneration.taskFound(chat_id);
+
+                try {
+                    telegramClient.execute(message); // Call method to send the photo
+                    telegramClient.execute(taskFoundMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("I am done with my Task!!")) {
+                SendMessage message = TaskCompletion.endGame(chat_id);
+                try {
+                    telegramClient.execute(message);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
