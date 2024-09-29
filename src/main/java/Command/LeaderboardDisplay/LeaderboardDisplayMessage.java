@@ -18,8 +18,11 @@ public class LeaderboardDisplayMessage {
         String additionalMessage;
         if (rank != 1) {
             User previousUser = userDAO.findUserBefore(teleHandle);
+            int previousUserPoints = previousUser.getPoints();
+            int currentUserPoints = userDAO.getUserPoints(teleHandle);
+            int pointsDifference = previousUserPoints - currentUserPoints;
             photoLink = "https://sayingimages.com/wp-content/uploads/you-got-this-dog-meme.jpg.webp";
-            additionalMessage = "You are currently " + previousUser.getPoints() + " points " +
+            additionalMessage = "You are currently " + pointsDifference + " points " +
                     "away from the user one rank above you!";
         } else {
             additionalMessage = "Good Job!! Keep up the good work XD";
