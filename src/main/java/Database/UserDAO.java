@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 import static Database.DatabaseConnection.connect;
 
@@ -153,5 +155,36 @@ public class UserDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public Map<String, Map<String, Integer>> getTaskSummaryByWeek() {
+        String query = "SELECT task_name, completed, DATE_TRUNC('week', completion_date) AS week_start, COUNT(*) AS task_count " +
+                "FROM user_tasks " +
+                "GROUP BY task_name, completed, week_start " +
+                "ORDER BY week_start DESC, task_name";
+
+        Map<String, Map<String, Integer>> summary = new HashMap<>();
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                String taskName = rs.getString("task_name");
+                boolean completed = rs.getBoolean("completed");
+                String weekStart = rs.getString("week_start");
+                int taskCount = rs.getInt("task_count");
+
+                String status = completed ? "Completed" : "Incomplete";
+
+                summary.computeIfAbsent(weekStart, k -> new HashMap<>())
+                        .put(taskName + " (" + status + ")", taskCount);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return summary;
     }
 }

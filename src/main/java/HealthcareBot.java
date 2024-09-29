@@ -1,4 +1,5 @@
 import Command.FindFriend.RequestForTeleHandle;
+import Command.GetSummary;
 import Command.LeaderboardDisplay.LeaderboardDisplayMessage;
 import Command.PlayGame.GameIntroduction;
 import Command.PlayGame.TaskCompletion;
@@ -146,7 +147,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
 
                 long user_id = userDAO.getUserIdByTelehandle(teleHandle);
                 userDAO.storeTask(user_id, TaskGeneration.currentTask, "", false);
-                
+
                 TaskGeneration.currentTask = "";
 
                 SendMessage message = SendMessage
@@ -197,15 +198,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     e.printStackTrace();
                 }
             } else if (message_text.equals("Check Summary")) {
-                int points = userDAO.getUserPoints(teleHandle);
-                SendPhoto message = SendPhoto
-                        .builder()
-                        .chatId(chat_id)
-                        // This time will send the picture using a URL
-                        .photo(new InputFile("https://static.vecteezy.com/system/resources/previews/001/970/338/non_2x/building-under-construction-site-free-vector.jpg"))
-                        .caption("Sorry, this is still under construction")
-                        .build();
-
+                SendMessage message = GetSummary.sendTaskSummary(chat_id);
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {
