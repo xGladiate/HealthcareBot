@@ -56,10 +56,12 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("/start")) {
                 userStates.put(chat_id, "");
-                SendMessage message = SendMessage // Create a message object
+                SendPhoto message = SendPhoto
                         .builder()
                         .chatId(chat_id)
-                        .text("Hi!! Welcome to Healthcare Bot, please click on the icon at the right of the text box or open your keyboard to play a game!")
+                        // This time will send the picture using a URL
+                        .photo(new InputFile("https://ctot.com/wp-content/uploads/2016/01/fotolia_76080180_subscription_monthly_xl.jpg?w=700"))
+                        .caption("Hi!! Welcome to Healthcare Bot, please click on the icon at the right of the text box or open your keyboard to play a game!")
                         .build();
 
                 // Add the keyboard to the message
@@ -84,7 +86,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("Play Game")) {
                 // Send a picture to the user
-                SendMessage message = GameIntroduction.startGame(chat_id);
+                SendPhoto message = GameIntroduction.startGame(chat_id);
 
                 try {
                     telegramClient.execute(message); // Call method to send the photo
@@ -104,7 +106,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("Leaderboard")) {
 
-                SendMessage message = LeaderboardDisplayMessage.leaderboardDisplayMessage(chat_id, teleHandle);
+                SendPhoto message = LeaderboardDisplayMessage.leaderboardDisplayMessage(chat_id, teleHandle);
 
                 try {
                     telegramClient.execute(message);
@@ -116,11 +118,13 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 // Ask the user to input the friend's telehandle
                 userStates.put(chat_id, "awaiting_telehandle");
 
-                SendMessage message = SendMessage.builder()
+                SendPhoto message = SendPhoto
+                        .builder()
                         .chatId(chat_id)
-                        .text("Please input your friend's telehandle (do not include @)")
+                        // This time will send the picture using a URL
+                        .photo(new InputFile("https://th.bing.com/th/id/OIP.B9NfjTZy37_N0e09O9OEjQAAAA?rs=1&pid=ImgDetMain"))
+                        .caption("What is your friend's telehandle? \n(do not include @)")
                         .build();
-
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {
@@ -131,7 +135,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 String friendTelehandle = message_text;
                 userStates.put(chat_id, "");  // Reset state after processing
 
-                SendMessage message = RequestForTeleHandle.getUser(friendTelehandle, chat_id);
+                SendPhoto message = RequestForTeleHandle.getUser(friendTelehandle, chat_id);
 
                 try {
                     telegramClient.execute(message);
@@ -161,17 +165,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     e.printStackTrace();
                 }
             } else if (message_text.equals("I am done with my Task!!")) {
-                SendMessage message = TaskCompletion.endGame(chat_id);
-                //add points
-                int points = 10 + userDAO.getUserPoints(teleHandle);
-                userDAO.addUser(teleHandle, points);
-                try {
-                    telegramClient.execute(message);
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
-            } else if (message_text.equals("I am done with my Task!!")) {
-                SendMessage message = TaskCompletion.endGame(chat_id);
+                SendPhoto message = TaskCompletion.endGame(chat_id);
                 //add points
                 int points = 10 + userDAO.getUserPoints(teleHandle);
                 userDAO.addUser(teleHandle, points);
@@ -182,9 +176,27 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("Individual Progress")) {
                 int points = userDAO.getUserPoints(teleHandle);
-                SendMessage message = SendMessage.builder()
+                SendPhoto message = SendPhoto
+                        .builder()
                         .chatId(chat_id)
-                        .text("You have " + points + " points.")
+                        // This time will send the picture using a URL
+                        .photo(new InputFile("https://static.vecteezy.com/system/resources/previews/005/214/351/original/keep-up-the-good-work-typography-t-shirt-design-vector.jpg"))
+                        .caption("You have " + points + " points")
+                        .build();
+
+                try {
+                    telegramClient.execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("Check Summary")) {
+                int points = userDAO.getUserPoints(teleHandle);
+                SendPhoto message = SendPhoto
+                        .builder()
+                        .chatId(chat_id)
+                        // This time will send the picture using a URL
+                        .photo(new InputFile("https://static.vecteezy.com/system/resources/previews/001/970/338/non_2x/building-under-construction-site-free-vector.jpg"))
+                        .caption("Sorry, this is still under construction")
                         .build();
 
                 try {
