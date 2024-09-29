@@ -1,6 +1,7 @@
 import Command.PlayGame.GameIntroduction;
 import Command.PlayGame.TaskCompletion;
 import Command.PlayGame.TaskGeneration;
+import Database.UserDAO;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -8,7 +9,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.games.Game;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -31,7 +31,11 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
         if (update.hasMessage() && update.getMessage().hasText()) {
             // Set variables
             String message_text = update.getMessage().getText();
+            String teleHandle = update.getMessage().getFrom().getUserName();  // Get the user's Telegram handle
             long chat_id = update.getMessage().getChatId();
+
+            UserDAO userDAO = new UserDAO();
+
             if (message_text.equals("/pic")) {
                 SendPhoto msg = SendPhoto
                         .builder()
@@ -61,6 +65,11 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                         .keyboardRow(new KeyboardRow("Show Friend Status", "Leaderboard"))
                         .build());
 
+                //If no user, default 0
+                if (!userDAO.userExists(teleHandle)) {
+                    userDAO.addUser(teleHandle, 0);
+                }
+
                 try {
                     telegramClient.execute(message); // Sending our message object to user
                 } catch (TelegramApiException e) {
@@ -88,6 +97,21 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("I am done with my Task!!")) {
                 SendMessage message = TaskCompletion.endGame(chat_id);
+                //add points
+                int points = 10 + userDAO.getUserPoints(teleHandle);
+                userDAO.addUser(teleHandle, points);
+                try {
+                    telegramClient.execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("Individual Progress")) {
+                int points = userDAO.getUserPoints(teleHandle);
+                SendMessage message = SendMessage.builder()
+                        .chatId(chat_id)
+                        .text("You have " + points + " points.")
+                        .build();
+
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {
