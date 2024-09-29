@@ -2,6 +2,7 @@ import Command.PlayGame.GameIntroduction;
 import Command.PlayGame.TaskCompletion;
 import Command.PlayGame.TaskGeneration;
 import Database.UserDAO;
+import Model.User;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -92,6 +93,66 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 try {
                     telegramClient.execute(message); // Call method to send the photo
                     telegramClient.execute(taskFoundMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("Leaderboard")) {
+
+                int rank = userDAO.findUserRank(teleHandle);
+                String additionalMessage;
+
+                String prefix = "th";
+                if (rank % 10 == 1) {
+                    prefix = "st";
+                }
+
+                if (rank % 10 == 2) {
+                    prefix = "nd";
+                }
+
+                if (rank % 10 == 3) {
+                    prefix = "rd";
+                }
+
+                String congratsMessage = "You are currently in the " + rank + prefix + " position!!\n";
+                if (rank != 1) {
+                    User previousUser = userDAO.findUserBefore(teleHandle);
+                    additionalMessage = "You are currently " + previousUser.getPoints() + " points" +
+                            "away from the the user rank one above you!";
+                } else {
+                    additionalMessage = "Good Job!! Keep up the good work XD";
+                }
+
+                SendMessage message = SendMessage
+                        .builder()
+                        .chatId(chat_id)
+                        .text(congratsMessage + additionalMessage)
+                        .build();
+
+                try {
+                    telegramClient.execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("Leave") || message_text.equals("Back to Menu")) {
+                SendMessage message = SendMessage
+                        .builder()
+                        .chatId(chat_id)
+                        .text("Do refer to the keyboard for different functionalities!")
+                        .build();
+
+                // Add the keyboard to the message
+                message.setReplyMarkup(ReplyKeyboardMarkup
+                        .builder()
+                        // Add first row of 3 buttons
+                        .keyboardRow(new KeyboardRow("Play Game"))
+                        .keyboardRow(new KeyboardRow( "Individual Progress", "Check Summary"))
+                        // Add second row of 3 buttons
+                        .keyboardRow(new KeyboardRow("Show Friend Status", "Leaderboard"))
+                        .build());
+
+                try {
+                    telegramClient.execute(message);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }

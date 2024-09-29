@@ -22,7 +22,7 @@ public class TaskCompletion {
         message.setReplyMarkup(ReplyKeyboardMarkup
                 .builder()
                 // Add first row of 3 buttons
-                .keyboardRow(new KeyboardRow("/start"))
+                .keyboardRow(new KeyboardRow("Back to Menu"))
                 .build());
         
         return message;

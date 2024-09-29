@@ -30,6 +30,7 @@ public class TaskGeneration {
         message.setReplyMarkup(ReplyKeyboardMarkup
                 .builder()
                 .keyboardRow(new KeyboardRow("I am done with my Task!!"))
+                .keyboardRow(new KeyboardRow("Leave"))
                 .build());
         return message;
     }

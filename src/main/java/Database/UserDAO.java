@@ -1,5 +1,7 @@
 package Database;
 
+import Model.User;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,6 +29,59 @@ public class UserDAO {
         }
         return false;  // User does not exist
     }
+
+    public int findUserRank(String telehandle) {
+        String query = "SELECT rank FROM ( " +
+                "  SELECT telehandle, RANK() OVER (ORDER BY points DESC) AS rank " +
+                "  FROM users " +
+                ") ranked_users WHERE telehandle = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, telehandle);
+            ResultSet rs = stmt.executeQuery();
+
+            // Check if the result set contains the rank
+            if (rs.next()) {
+                return rs.getInt("rank");
+            } else {
+                System.out.println("User not found.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;  // Return -1 if user is not found
+    }
+
+    public User findUserBefore(String telehandle) {
+        String query = "WITH ranked_users AS (" +
+                "  SELECT telehandle, points, RANK() OVER (ORDER BY points DESC) AS rank " +
+                "  FROM users " +
+                ") " +
+                "SELECT telehandle, points FROM ranked_users " +
+                "WHERE rank = (SELECT rank FROM ranked_users WHERE telehandle = ?) - 1";
+
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, telehandle);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String beforeTelehandle = rs.getString("telehandle");
+                int points = rs.getInt("points");
+                return new User(beforeTelehandle, points);  // Assuming you have a User class
+            } else {
+                System.out.println("No user found before the given user.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;  // Return null if no user is found
+    }
+
+
 
     public static void addUser(String telehandle, int points) {
         String SQL = "INSERT INTO users(telehandle, points) VALUES(?, ?) " +

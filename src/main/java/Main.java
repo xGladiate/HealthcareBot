@@ -7,7 +7,7 @@ public class Main {
         try (TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication()) {
             botsApplication.registerBot(botToken, new HealthcareBot(botToken));
             System.out.println("MyAmazingBot successfully started!");
-            // Ensure this prcess wait forever
+            // Ensure this process wait forever
             Thread.currentThread().join();
         } catch (Exception e) {
             e.printStackTrace();
