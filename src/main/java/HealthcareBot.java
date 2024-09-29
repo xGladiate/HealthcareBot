@@ -96,7 +96,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
             } else if (message_text.equals("Spin the wheel")) {
                 // Send a picture to the user
                 SendPhoto message = TaskGeneration.taskGeneration(chat_id);
-                SendPhoto taskFoundMessage = TaskGeneration.taskFound(chat_id);
+                SendPhoto taskFoundMessage = TaskGeneration.taskFound(chat_id, teleHandle);
 
                 try {
                     telegramClient.execute(message); // Call method to send the photo
@@ -143,6 +143,12 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     e.printStackTrace();
                 }
             } else if (message_text.equals("Leave") || message_text.equals("Back to Menu")) {
+
+                long user_id = userDAO.getUserIdByTelehandle(teleHandle);
+                userDAO.storeTask(user_id, TaskGeneration.currentTask, "", false);
+                
+                TaskGeneration.currentTask = "";
+
                 SendMessage message = SendMessage
                         .builder()
                         .chatId(chat_id)
@@ -165,7 +171,8 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     e.printStackTrace();
                 }
             } else if (message_text.equals("I am done with my Task!!")) {
-                SendPhoto message = TaskCompletion.endGame(chat_id);
+                long user_id = userDAO.getUserIdByTelehandle(teleHandle);
+                SendPhoto message = TaskCompletion.endGame(chat_id, user_id);
                 //add points
                 int points = 10 + userDAO.getUserPoints(teleHandle);
                 userDAO.addUser(teleHandle, points);

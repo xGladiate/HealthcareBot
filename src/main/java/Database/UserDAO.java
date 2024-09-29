@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 import static Database.DatabaseConnection.connect;
 
@@ -112,5 +114,44 @@ public class UserDAO {
             e.printStackTrace();
         }
         return 0; // Default points if user not found
+    }
+
+    public long getUserIdByTelehandle(String telehandle) {
+        String query = "SELECT id FROM users WHERE telehandle = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, telehandle);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id");
+            } else {
+                System.out.println("User not found.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; // Return -1 if user is not found
+    }
+
+
+    public static void storeTask(long userId, String taskName, String taskType, boolean completed) {
+        String query = "INSERT INTO user_tasks (user_id, task_name, task_type, completed, completion_date) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            // Set the parameters for the insertion
+            pstmt.setLong(1, userId);
+            pstmt.setString(2, taskName);
+            pstmt.setString(3, taskType);
+            pstmt.setBoolean(4, completed);
+            pstmt.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
+
+
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

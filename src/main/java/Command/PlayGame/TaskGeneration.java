@@ -1,5 +1,6 @@
 package Command.PlayGame;
 
+import Database.UserDAO;
 import Model.Task;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Random;
 
 public class TaskGeneration {
+
+    public static String currentTask;
 
     public static SendPhoto taskGeneration(long chat_id) {
         String taskGenerationMessage = "Now let me pick your task for today...";
@@ -24,7 +27,9 @@ public class TaskGeneration {
         return message;
     }
 
-    public static SendPhoto taskFound(long chat_id) {
+    public static SendPhoto taskFound(long chat_id, String telehandle) {
+
+        UserDAO userDAO = new UserDAO();
         // List of possible tasks
         List<Task> tasks = Arrays.asList(
                 new Task("Find a trail containing at least 8 ants!", "https://www.mypmp.net/wp-content/uploads/2017/10/iS-497387771_ant.jpg"),
@@ -39,6 +44,8 @@ public class TaskGeneration {
         // Randomly select a task
         Random rand = new Random();
         Task randomTask = tasks.get(rand.nextInt(tasks.size()));
+
+        currentTask = randomTask.getName();
 
         SendPhoto message = SendPhoto
                 .builder()
