@@ -1,3 +1,5 @@
+import Command.FindFriend.RequestForTeleHandle;
+import Command.LeaderboardDisplay.LeaderboardDisplayMessage;
 import Command.PlayGame.GameIntroduction;
 import Command.PlayGame.TaskCompletion;
 import Command.PlayGame.TaskGeneration;
@@ -17,10 +19,13 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
     private final TelegramClient telegramClient;
+    private final Map<Long, String> userStates = new HashMap<>();
 
     public HealthcareBot(String botToken) {
         telegramClient = new OkHttpTelegramClient(botToken);
@@ -50,6 +55,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     e.printStackTrace();
                 }
             } else if (message_text.equals("/start")) {
+                userStates.put(chat_id, "");
                 SendMessage message = SendMessage // Create a message object
                         .builder()
                         .chatId(chat_id)
@@ -98,36 +104,34 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("Leaderboard")) {
 
-                int rank = userDAO.findUserRank(teleHandle);
-                String additionalMessage;
+                SendMessage message = LeaderboardDisplayMessage.leaderboardDisplayMessage(chat_id, teleHandle);
 
-                String prefix = "th";
-                if (rank % 10 == 1) {
-                    prefix = "st";
+                try {
+                    telegramClient.execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
                 }
 
-                if (rank % 10 == 2) {
-                    prefix = "nd";
-                }
+            } else if (message_text.equals("Show Friend Status")) {
+                // Ask the user to input the friend's telehandle
+                userStates.put(chat_id, "awaiting_telehandle");
 
-                if (rank % 10 == 3) {
-                    prefix = "rd";
-                }
-
-                String congratsMessage = "You are currently in the " + rank + prefix + " position!!\n";
-                if (rank != 1) {
-                    User previousUser = userDAO.findUserBefore(teleHandle);
-                    additionalMessage = "You are currently " + previousUser.getPoints() + " points" +
-                            "away from the the user rank one above you!";
-                } else {
-                    additionalMessage = "Good Job!! Keep up the good work XD";
-                }
-
-                SendMessage message = SendMessage
-                        .builder()
+                SendMessage message = SendMessage.builder()
                         .chatId(chat_id)
-                        .text(congratsMessage + additionalMessage)
+                        .text("Please input your friend's telehandle (do not include @)")
                         .build();
+
+                try {
+                    telegramClient.execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if ("awaiting_telehandle".equals(userStates.get(chat_id))) {
+                // Handle friend's telehandle input
+                String friendTelehandle = message_text;
+                userStates.put(chat_id, "");  // Reset state after processing
+
+                SendMessage message = RequestForTeleHandle.getUser(friendTelehandle, chat_id);
 
                 try {
                     telegramClient.execute(message);
@@ -151,6 +155,16 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                         .keyboardRow(new KeyboardRow("Show Friend Status", "Leaderboard"))
                         .build());
 
+                try {
+                    telegramClient.execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("I am done with my Task!!")) {
+                SendMessage message = TaskCompletion.endGame(chat_id);
+                //add points
+                int points = 10 + userDAO.getUserPoints(teleHandle);
+                userDAO.addUser(teleHandle, points);
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {
