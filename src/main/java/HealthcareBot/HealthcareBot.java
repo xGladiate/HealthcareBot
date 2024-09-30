@@ -121,7 +121,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 SendMessage msg = SendMessage
                         .builder()
                         .chatId(chat_id)
-                        .text("How many times do you experience stress? \nPlease input numbers only.")
+                        .text("How many times do you experience stress a week? \nPlease input numbers only.")
                         .build();
 
                 try {

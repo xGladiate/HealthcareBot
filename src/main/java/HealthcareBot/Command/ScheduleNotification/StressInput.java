@@ -11,6 +11,8 @@ public class StressInput {
         StressIndicatorDAO dao = new StressIndicatorDAO();
         dao.storeUserStressLevel(chat_id, userId, stressFrequency);
 
-        notifier.scheduleNotifications(chat_id, userId, stressFrequency);
+        if (stressFrequency != 0) {
+            notifier.scheduleNotifications(chat_id, userId, stressFrequency);
+        }
     }
 }
