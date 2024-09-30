@@ -198,7 +198,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     e.printStackTrace();
                 }
             } else if (message_text.equals("Check Summary")) {
-                SendMessage message = GetSummary.sendTaskSummary(chat_id);
+                SendMessage message = GetSummary.sendTaskSummaryByDay(chat_id);
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {
