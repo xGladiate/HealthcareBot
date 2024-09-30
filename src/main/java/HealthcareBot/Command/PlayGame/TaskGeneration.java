@@ -1,7 +1,7 @@
-package Command.PlayGame;
+package HealthcareBot.Command.PlayGame;
 
-import Database.UserDAO;
-import Model.Task;
+import HealthcareBot.Database.UserDAO;
+import HealthcareBot.Model.Task;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;

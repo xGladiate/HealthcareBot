@@ -1,4 +1,4 @@
-package Database;
+package HealthcareBot.Database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

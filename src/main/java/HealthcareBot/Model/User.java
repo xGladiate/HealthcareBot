@@ -1,4 +1,4 @@
-package Model;
+package HealthcareBot.Model;
 
 public class User {
     private String telehandle;

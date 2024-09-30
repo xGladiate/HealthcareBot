@@ -1,3 +1,5 @@
+package HealthcareBot;
+
 import com.vdurmont.emoji.EmojiParser;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;

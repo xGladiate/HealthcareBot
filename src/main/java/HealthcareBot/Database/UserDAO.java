@@ -1,6 +1,6 @@
-package Database;
+package HealthcareBot.Database;
 
-import Model.User;
+import HealthcareBot.Model.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static Database.DatabaseConnection.connect;
+import static HealthcareBot.Database.DatabaseConnection.connect;
 
 public class UserDAO {
 
@@ -79,15 +79,14 @@ public class UserDAO {
                 int points = rs.getInt("points");
                 return new User(beforeTelehandle, points);  // Assuming you have a User class
             } else {
-                System.out.println("No user found before the given user.");
+                System.out.println("No user found before the given user: " + telehandle);
             }
         } catch (SQLException e) {
+            System.err.println("SQL Error in findUserBefore: " + e.getMessage());
             e.printStackTrace();
         }
         return null;  // Return null if no user is found
     }
-
-
 
     public static void addUser(String telehandle, int points) {
         String SQL = "INSERT INTO users(telehandle, points) VALUES(?, ?) " +

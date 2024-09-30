@@ -1,7 +1,7 @@
-package Command.LeaderboardDisplay;
+package HealthcareBot.Command.LeaderboardDisplay;
 
-import Database.UserDAO;
-import Model.User;
+import HealthcareBot.Database.UserDAO;
+import HealthcareBot.Model.User;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 

@@ -1,11 +1,13 @@
-import Command.FindFriend.RequestForTeleHandle;
-import Command.GetSummary;
-import Command.LeaderboardDisplay.LeaderboardDisplayMessage;
-import Command.PlayGame.GameIntroduction;
-import Command.PlayGame.TaskCompletion;
-import Command.PlayGame.TaskGeneration;
-import Database.UserDAO;
-import Model.User;
+package HealthcareBot;
+
+import HealthcareBot.Command.FindFriend.RequestForTeleHandle;
+import HealthcareBot.Command.GetSummary;
+import HealthcareBot.Command.LeaderboardDisplay.LeaderboardDisplayMessage;
+import HealthcareBot.Command.PlayGame.GameIntroduction;
+import HealthcareBot.Command.PlayGame.TaskCompletion;
+import HealthcareBot.Command.PlayGame.TaskGeneration;
+import HealthcareBot.Command.ScheduleNotification.StressInput;
+import HealthcareBot.Database.UserDAO;
 import com.vdurmont.emoji.EmojiParser;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
@@ -25,9 +27,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static HealthcareBot.Command.ScheduleNotification.StressInput.handleUserStressInput;
+
 public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
+
     private final TelegramClient telegramClient;
     private final Map<Long, String> userStates = new HashMap<>();
+
+    public static void sendMessage(long chatId, String message, String botToken) {
+        TelegramClient telegramClient = new OkHttpTelegramClient(botToken);
+        SendMessage sendMessage = new SendMessage(String.valueOf(chatId), message);
+        try {
+            telegramClient.execute(sendMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendPhotoMessageToUser(long chat_id, String text, String photoURL) {
+        SendPhoto msg = SendPhoto
+                .builder()
+                .chatId(chat_id)
+                .photo(new InputFile(photoURL))
+                .caption(text)
+                .build();
+        try {
+            telegramClient.execute(msg);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 
     public HealthcareBot(String botToken) {
         telegramClient = new OkHttpTelegramClient(botToken);
@@ -45,17 +74,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
             UserDAO userDAO = new UserDAO();
 
             if (message_text.equals("/pic")) {
-                SendPhoto msg = SendPhoto
-                        .builder()
-                        .chatId(chat_id)
-                        .photo(new InputFile("https://png.pngtree.com/background/20230519/original/pngtree-this-is-a-picture-of-a-tiger-cub-that-looks-straight-picture-image_2660243.jpg"))
-                        .caption("This is a little cat :)")
-                        .build();
-                try {
-                    telegramClient.execute(msg); // Call method to send the photo
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
+                sendPhotoMessageToUser(chat_id, "This is a little cat :)", "https://png.pngtree.com/background/20230519/original/pngtree-this-is-a-picture-of-a-tiger-cub-that-looks-straight-picture-image_2660243.jpg");
             } else if (message_text.equals("/start")) {
                 userStates.put(chat_id, "");
                 SendPhoto message = SendPhoto
@@ -70,7 +89,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 message.setReplyMarkup(ReplyKeyboardMarkup
                         .builder()
                         // Add first row of 3 buttons
-                        .keyboardRow(new KeyboardRow("Play Game"))
+                        .keyboardRow(new KeyboardRow("Play Game", "Stress Logger"))
                         .keyboardRow(new KeyboardRow( "Individual Progress", "Check Summary"))
                         // Add second row of 3 buttons
                         .keyboardRow(new KeyboardRow("Show Friend Status", "Leaderboard"))
@@ -94,6 +113,55 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     telegramClient.execute(message); // Call method to send the photo
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
+                }
+            } else if (message_text.equals("Stress Logger")) {
+                // Set user state to expect stress frequency input
+                userStates.put(chat_id, "awaiting_stress_input");
+
+                SendMessage msg = SendMessage
+                        .builder()
+                        .chatId(chat_id)
+                        .text("How many times do you experience stress? \nPlease input numbers only.")
+                        .build();
+
+                try {
+                    telegramClient.execute(msg); // Call method to send the message
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if ("awaiting_stress_input".equals(userStates.get(chat_id))) {
+                // Handle user input for stress frequency
+                String input = message_text;
+
+                // Validate the input to ensure it's a number
+                if (input.matches("\\d+")) { // Regex to check if the input is numeric
+                    int stressCount = Integer.parseInt(input);
+                    long user_id = userDAO.getUserIdByTelehandle(teleHandle);
+                    StressInput.handleUserStressInput(chat_id, user_id, stressCount); // Call your method to handle the input
+                    userStates.put(chat_id, "");  // Reset state after processing
+
+                    SendMessage msg = SendMessage
+                            .builder()
+                            .chatId(chat_id)
+                            .text("Thank you! Your stress count has been recorded as: " + stressCount)
+                            .build();
+                    try {
+                        telegramClient.execute(msg); // Send confirmation message
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    // Send a message to indicate invalid input
+                    SendMessage msg = SendMessage
+                            .builder()
+                            .chatId(chat_id)
+                            .text("Invalid input. Please enter a valid number.")
+                            .build();
+                    try {
+                        telegramClient.execute(msg); // Send invalid input message
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+                    }
                 }
             } else if (message_text.equals("Spin the wheel")) {
                 // Send a picture to the user
@@ -165,12 +233,11 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 message.setReplyMarkup(ReplyKeyboardMarkup
                         .builder()
                         // Add first row of 3 buttons
-                        .keyboardRow(new KeyboardRow("Play Game"))
+                        .keyboardRow(new KeyboardRow("Play Game", "Stress Logger"))
                         .keyboardRow(new KeyboardRow("Individual Progress", "Check Summary"))
                         // Add second row of 3 buttons
                         .keyboardRow(new KeyboardRow("Show Friend Status", "Leaderboard"))
                         .build());
-
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {

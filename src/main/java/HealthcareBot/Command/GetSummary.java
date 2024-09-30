@@ -1,6 +1,6 @@
-package Command;
+package HealthcareBot.Command;
 
-import Database.UserDAO;
+import HealthcareBot.Database.UserDAO;
 import com.vdurmont.emoji.EmojiParser;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 

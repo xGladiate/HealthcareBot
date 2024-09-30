@@ -1,6 +1,6 @@
-package Command.FindFriend;
+package HealthcareBot.Command.FindFriend;
 
-import Database.UserDAO;
+import HealthcareBot.Database.UserDAO;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
