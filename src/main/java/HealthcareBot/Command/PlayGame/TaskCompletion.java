@@ -21,6 +21,7 @@ public class TaskCompletion {
             userDAO.storeTask(user_id, taskName, "", true);
         }
 
+        TaskGeneration.taskOngoing = false;
         String currentTask = TaskGeneration.currentTask;
         boolean isFavorited = userDAO.isTaskFavorited(user_id, currentTask);  // Check if task is favorited
 
