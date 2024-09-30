@@ -190,33 +190,37 @@ public class UserDAO {
         return summary;
     }
 
-    public Map<String, Map<String, Map<String, Integer>>> getTaskSummaryByDay(long user_id) {
+    public Map<String, Map<String, Map<String, Integer>>> getTaskSummaryByDay(long userId) {
         String query = "SELECT task_name, completed, DATE_TRUNC('month', completion_date) AS month_start, " +
                 "DATE_TRUNC('day', completion_date) AS day_start, COUNT(*) AS task_count " +
                 "FROM user_tasks " +
-                "WHERE user_id = ? " +
+                "WHERE user_id = ? " +  // Added a WHERE clause to filter by userId
                 "GROUP BY task_name, completed, month_start, day_start " +
                 "ORDER BY month_start DESC, day_start, task_name";
 
         Map<String, Map<String, Map<String, Integer>>> summary = new HashMap<>();
 
         try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(query);
-             ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
 
-            while (rs.next()) {
-                String taskName = rs.getString("task_name");
-                boolean completed = rs.getBoolean("completed");
-                String monthStart = rs.getString("month_start");
-                String dayStart = rs.getString("day_start");
-                int taskCount = rs.getInt("task_count");
+            // Set the userId parameter in the query
+            pstmt.setLong(1, userId);
 
-                String status = completed ? "Completed" : "Incomplete";
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String taskName = rs.getString("task_name");
+                    boolean completed = rs.getBoolean("completed");
+                    String monthStart = rs.getString("month_start");
+                    String dayStart = rs.getString("day_start");
+                    int taskCount = rs.getInt("task_count");
 
-                // Group tasks by month, then by day
-                summary.computeIfAbsent(monthStart, k -> new HashMap<>())
-                        .computeIfAbsent(dayStart, k -> new HashMap<>())
-                        .put(taskName + " (" + status + ")", taskCount);
+                    String status = completed ? "Completed" : "Incomplete";
+
+                    // Group tasks by month, then by day
+                    summary.computeIfAbsent(monthStart, k -> new HashMap<>())
+                            .computeIfAbsent(dayStart, k -> new HashMap<>())
+                            .put(taskName + " (" + status + ")", taskCount);
+                }
             }
 
         } catch (SQLException e) {
@@ -225,6 +229,7 @@ public class UserDAO {
 
         return summary;
     }
+
     public void favoriteTask(long userId, String taskName) {
         String query = "INSERT INTO user_favorites (user_id, task_name) VALUES (?, ?)";
         try (Connection conn = connect();
