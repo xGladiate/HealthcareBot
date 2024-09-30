@@ -14,6 +14,7 @@ import java.util.Random;
 public class TaskGeneration {
 
     public static String currentTask;
+    public static boolean taskOngoing;
 
     public static SendPhoto taskGeneration(long chat_id) {
         String taskGenerationMessage = "Now let me pick your task for today...";
@@ -46,6 +47,7 @@ public class TaskGeneration {
         Task randomTask = tasks.get(rand.nextInt(tasks.size()));
 
         currentTask = randomTask.getName();
+        taskOngoing = true;
 
         SendPhoto message = SendPhoto
                 .builder()

@@ -145,9 +145,10 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("Leave") || message_text.equals("Back to Menu")) {
 
+                TaskGeneration.taskOngoing = false;
                 long user_id = userDAO.getUserIdByTelehandle(teleHandle);
 
-                if (TaskGeneration.currentTask != null || !TaskGeneration.currentTask.isEmpty()) {
+                if (TaskGeneration.currentTask != null && !TaskGeneration.currentTask.isEmpty()) {
                     userDAO.storeTask(user_id, TaskGeneration.currentTask, "", false);
                 }
 
@@ -164,7 +165,7 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                         .builder()
                         // Add first row of 3 buttons
                         .keyboardRow(new KeyboardRow("Play Game"))
-                        .keyboardRow(new KeyboardRow( "Individual Progress", "Check Summary"))
+                        .keyboardRow(new KeyboardRow("Individual Progress", "Check Summary"))
                         // Add second row of 3 buttons
                         .keyboardRow(new KeyboardRow("Show Friend Status", "Leaderboard"))
                         .build());
@@ -176,16 +177,75 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
             } else if (message_text.equals("I am done with my Task!!")) {
                 long user_id = userDAO.getUserIdByTelehandle(teleHandle);
+
+                // Send task completion message
                 SendPhoto message = TaskCompletion.endGame(chat_id, user_id);
-                //add points
+
+                // Add points
                 int points = 10 + userDAO.getUserPoints(teleHandle);
                 userDAO.addUser(teleHandle, points);
+
+                try {
+                    telegramClient.execute(message); // Send task completion message
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            } else if (message_text.equals("Favorite")) {
+                long user_id = userDAO.getUserIdByTelehandle(teleHandle);
+                String currentTask = TaskGeneration.currentTask;
+
+                // Mark task as favorited in the database
+                userDAO.favoriteTask(user_id, currentTask);
+
+                SendPhoto message = SendPhoto
+                        .builder()
+                        .chatId(chat_id)
+                        // This time will send the picture using a URL
+                        .photo(new InputFile("https://th.bing.com/th/id/OIP.r9pSedjpIFWODyT-g_WwogHaFk?rs=1&pid=ImgDetMain"))
+                        .caption("Task favorited!! :)")
+                        .build();
+
+                message.setReplyMarkup(ReplyKeyboardMarkup
+                        .builder()
+                        // Add first row of 3 buttons
+                        .keyboardRow(new KeyboardRow("Back to Menu"))
+                        .keyboardRow(new KeyboardRow("Unfavorite"))
+                        .build());
+
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
-            } else if (message_text.equals("Individual Progress")) {
+
+            } else if (message_text.equals("Unfavorite")) {
+                long user_id = userDAO.getUserIdByTelehandle(teleHandle);
+                String currentTask = TaskGeneration.currentTask;
+
+                // Mark task as unfavorited in the database
+                userDAO.unfavoriteTask(user_id, currentTask);
+
+                SendPhoto message = SendPhoto
+                        .builder()
+                        .chatId(chat_id)
+                        // This time will send the picture using a URL
+                        .photo(new InputFile("https://th.bing.com/th/id/OIP.UngM96PQuoOTlEp9iZGKOAHaGr?rs=1&pid=ImgDetMain"))
+                        .caption("Task unfavorited! :'0")
+                        .build();
+
+                message.setReplyMarkup(ReplyKeyboardMarkup
+                        .builder()
+                        // Add first row of 3 buttons
+                        .keyboardRow(new KeyboardRow("Back to Menu"))
+                        .keyboardRow(new KeyboardRow("Favorite"))
+                        .build());
+
+                try {
+                    telegramClient.execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+        } else if (message_text.equals("Individual Progress")) {
                 int points = userDAO.getUserPoints(teleHandle);
                 SendPhoto message = SendPhoto
                         .builder()

@@ -223,5 +223,43 @@ public class UserDAO {
 
         return summary;
     }
+    public void favoriteTask(long userId, String taskName) {
+        String query = "INSERT INTO user_favorites (user_id, task_name) VALUES (?, ?)";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setLong(1, userId);
+            pstmt.setString(2, taskName);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void unfavoriteTask(long userId, String taskName) {
+        String query = "DELETE FROM user_favorites WHERE user_id = ? AND task_name = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setLong(1, userId);
+            pstmt.setString(2, taskName);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isTaskFavorited(long userId, String taskName) {
+        String query = "SELECT COUNT(*) FROM user_favorites WHERE user_id = ? AND task_name = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setLong(1, userId);
+            pstmt.setString(2, taskName);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
