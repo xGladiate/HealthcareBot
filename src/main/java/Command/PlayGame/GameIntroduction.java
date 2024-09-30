@@ -14,7 +14,7 @@ public class GameIntroduction {
 
     public static SendPhoto startGame(long chat_id) {
         String introductionMessage = EmojiParser.parseToUnicode("This is a random task generator game!!! \n" +
-                "Press [Spin The Wheel] to start! :smile:");
+                "Press ~Spin The Wheel~ to start! :smile:");
 
         SendPhoto message = SendPhoto
                 .builder()

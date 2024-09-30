@@ -1,6 +1,7 @@
 package Command;
 
 import Database.UserDAO;
+import com.vdurmont.emoji.EmojiParser;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.time.LocalDateTime;
@@ -21,12 +22,12 @@ public class GetSummary {
     }
 
     public static SendMessage sendTaskSummaryByMonth(long chatId) {
-        String taskSummary = getFormattedTaskSummaryByMonth();
+        String taskSummary = EmojiParser.parseToUnicode(getFormattedTaskSummaryByMonth());
 
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
                 .text(taskSummary)
-                .parseMode("Markdown") // Use Markdown for formatting if desired
+//                .parseMode("Markdown") // Use Markdown for formatting if desired
                 .build();
         return message;
     }
@@ -67,37 +68,44 @@ public class GetSummary {
         Map<String, Map<String, Map<String, Integer>>> summary = userDAO.getTaskSummaryByDay();
         StringBuilder formattedSummary = new StringBuilder();
 
+        // DateTime formatters for displaying the date information
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MM/yyyy");
         DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         for (Map.Entry<String, Map<String, Map<String, Integer>>> monthEntry : summary.entrySet()) {
-            // Parse the month
+            // Parse the month start date to a LocalDateTime
             LocalDateTime monthStartDateTime = LocalDateTime.parse(monthEntry.getKey(), dateTimeFormatter);
-            YearMonth month = YearMonth.from(monthStartDateTime);
 
-            // Format the month display
+            // Format the month display, e.g., September 2024
             String monthDisplay = String.format("%s %d",
-                    toTitleCase(month.getMonth().name()),
-                    month.getYear());
+                    toTitleCase(monthStartDateTime.getMonth().name()), monthStartDateTime.getYear());
 
             formattedSummary.append(monthDisplay).append("\n");
 
-            // Loop through days of the month
+            // Loop through each day of the month
             for (Map.Entry<String, Map<String, Integer>> dayEntry : monthEntry.getValue().entrySet()) {
+                // Parse and format the day start date as [Day/Month/Year]
                 LocalDateTime dayStartDateTime = LocalDateTime.parse(dayEntry.getKey(), dateTimeFormatter);
                 String dayDisplay = dayStartDateTime.format(dayFormatter);
 
                 formattedSummary.append("  ").append(dayDisplay).append("\n");
 
-                // List tasks for that day
+                // Loop through tasks for that day
                 for (Map.Entry<String, Integer> taskEntry : dayEntry.getValue().entrySet()) {
-                    formattedSummary.append("    - ").append(taskEntry.getKey())
-                            .append(": ").append(taskEntry.getValue()).append("\n");
+                    String taskNameWithStatus = taskEntry.getKey(); // This includes task name and status
+                    int taskCount = taskEntry.getValue();
+
+                    // Determine the symbol based on the status (Completed/Incomplete)
+                    String symbol = EmojiParser.parseToUnicode(taskNameWithStatus.contains("Completed") ? ":star:" : ":fire:");
+
+                    // Format task entry with the symbol, e.g., ⭐️ Task Name (Completed) : X times
+                    formattedSummary.append("    ").append(symbol).append(" ")
+                            .append(taskNameWithStatus)
+                            .append(": ").append(taskCount).append(" times\n");
                 }
             }
 
-            formattedSummary.append("\n"); // Add extra line for better readability
+            formattedSummary.append("\n"); // Extra line for readability
         }
 
         return formattedSummary.toString();
