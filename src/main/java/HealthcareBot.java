@@ -146,7 +146,10 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
             } else if (message_text.equals("Leave") || message_text.equals("Back to Menu")) {
 
                 long user_id = userDAO.getUserIdByTelehandle(teleHandle);
-                userDAO.storeTask(user_id, TaskGeneration.currentTask, "", false);
+
+                if (TaskGeneration.currentTask != null || !TaskGeneration.currentTask.isEmpty()) {
+                    userDAO.storeTask(user_id, TaskGeneration.currentTask, "", false);
+                }
 
                 TaskGeneration.currentTask = "";
 

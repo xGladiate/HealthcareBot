@@ -17,7 +17,8 @@ public class TaskCompletion {
 
 
         if (!TaskGeneration.currentTask.isEmpty()) {
-            userDAO.storeTask(user_id, TaskGeneration.currentTask, "", true);
+            String taskName = TaskGeneration.currentTask;
+            userDAO.storeTask(user_id, taskName, "", true);
         }
 
         SendPhoto message = SendPhoto
