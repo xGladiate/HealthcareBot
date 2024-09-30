@@ -6,6 +6,7 @@ import Command.PlayGame.TaskCompletion;
 import Command.PlayGame.TaskGeneration;
 import Database.UserDAO;
 import Model.User;
+import com.vdurmont.emoji.EmojiParser;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -247,12 +248,25 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                 }
         } else if (message_text.equals("Individual Progress")) {
                 int points = userDAO.getUserPoints(teleHandle);
+                String individualMessage = "You have " + points + " points :fire:";
+                List<String> favoriteList = userDAO.getFavoriteTasks(userDAO.getUserIdByTelehandle(teleHandle));
+                int size;
+                if (favoriteList.isEmpty()) {
+                    size = 0;
+                } else {
+                    size = favoriteList.size();
+                    individualMessage = individualMessage + "\n\nHere are your favorite tasks :heart: : ";
+                    for (int i = 0 ; i < size; i++) {
+                        individualMessage = individualMessage + "\n - " + favoriteList.get(i);
+                    }
+
+                }
                 SendPhoto message = SendPhoto
                         .builder()
                         .chatId(chat_id)
                         // This time will send the picture using a URL
                         .photo(new InputFile("https://static.vecteezy.com/system/resources/previews/005/214/351/original/keep-up-the-good-work-typography-t-shirt-design-vector.jpg"))
-                        .caption("You have " + points + " points")
+                        .caption(EmojiParser.parseToUnicode(individualMessage))
                         .build();
 
                 try {

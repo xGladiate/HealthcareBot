@@ -8,7 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static Database.DatabaseConnection.connect;
@@ -261,5 +263,26 @@ public class UserDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<String> getFavoriteTasks(long userId) {
+        String query = "SELECT task_name FROM user_favorites WHERE user_id = ?";
+        List<String> favoriteTasks = new ArrayList<>();
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setLong(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                favoriteTasks.add(rs.getString("task_name"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return favoriteTasks;
     }
 }
