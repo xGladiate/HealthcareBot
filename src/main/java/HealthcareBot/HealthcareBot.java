@@ -322,9 +322,9 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     size = 0;
                 } else {
                     size = favoriteList.size();
-                    individualMessage = individualMessage + "\n\nHere are your favorite tasks :heart: : ";
+                    individualMessage = individualMessage + "\n\nHere are your favorite tasks :excited: : ";
                     for (int i = 0 ; i < size; i++) {
-                        individualMessage = individualMessage + "\n - " + favoriteList.get(i);
+                        individualMessage = individualMessage + "\n :heart: " + favoriteList.get(i);
                     }
 
                 }
@@ -342,7 +342,8 @@ public class HealthcareBot implements LongPollingSingleThreadUpdateConsumer {
                     e.printStackTrace();
                 }
             } else if (message_text.equals("Check Summary")) {
-                SendMessage message = GetSummary.sendTaskSummaryByDay(chat_id);
+                long user_id = userDAO.getUserIdByTelehandle(teleHandle);
+                SendMessage message = GetSummary.sendTaskSummaryByDay(chat_id, user_id);
                 try {
                     telegramClient.execute(message);
                 } catch (TelegramApiException e) {

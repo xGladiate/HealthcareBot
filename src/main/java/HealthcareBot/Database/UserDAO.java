@@ -190,10 +190,11 @@ public class UserDAO {
         return summary;
     }
 
-    public Map<String, Map<String, Map<String, Integer>>> getTaskSummaryByDay() {
+    public Map<String, Map<String, Map<String, Integer>>> getTaskSummaryByDay(long user_id) {
         String query = "SELECT task_name, completed, DATE_TRUNC('month', completion_date) AS month_start, " +
                 "DATE_TRUNC('day', completion_date) AS day_start, COUNT(*) AS task_count " +
                 "FROM user_tasks " +
+                "WHERE user_id = ? " +
                 "GROUP BY task_name, completed, month_start, day_start " +
                 "ORDER BY month_start DESC, day_start, task_name";
 

@@ -10,8 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class GetSummary {
-    public static SendMessage sendTaskSummaryByDay(long chatId) {
-        String taskSummary = getFormattedTaskSummaryByDay();
+    public static SendMessage sendTaskSummaryByDay(long chatId, long user_id) {
+        String taskSummary = getFormattedTaskSummaryByDay(user_id);
 
         SendMessage message = SendMessage.builder()
                 .chatId(String.valueOf(chatId))
@@ -63,9 +63,9 @@ public class GetSummary {
         return formattedSummary.toString();
     }
 
-    public static String getFormattedTaskSummaryByDay() {
+    public static String getFormattedTaskSummaryByDay(long user_id) {
         UserDAO userDAO = new UserDAO();
-        Map<String, Map<String, Map<String, Integer>>> summary = userDAO.getTaskSummaryByDay();
+        Map<String, Map<String, Map<String, Integer>>> summary = userDAO.getTaskSummaryByDay(user_id);
         StringBuilder formattedSummary = new StringBuilder();
 
         // DateTime formatters for displaying the date information
